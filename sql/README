@@ -1,0 +1,49 @@
+
+An already running PostgreSQL is assumed.
+
+To create the database, connect to the PostgreSQL server
+using a database role who has CREATEDB priviledge (or as superuser),
+and execute the commands in db-create.sql file.  For example:
+
+  su - postgres
+  psql -q -f db-create.sql -v dbName=users
+
+You can specify the database name in the dbName variable above.
+If you choose another than 'users', remember to change it in
+commands that follow.
+
+Then, you can connect to the newly created database and
+create the database objects in it.  For example:
+
+  # still as 'postgres' operating system user
+  psql -q -f db-types-create.sql users
+
+Note that the database and the objects in it should NOT be owned by
+any of the roles that will be used by the software.  Some
+database administrative role is better suited for the owner.
+
+To give minimum needed priviledges to the software, first
+create a separate database role for it.  For example:
+
+  # still as 'postgres' operating system user, or another database
+  # role that has CREATEROLE priviledge.
+  psql -q -f role-create.sql -v rolename=user-service -v password=password
+
+You can specify the role name in the rolename variable above.
+If you choose another that 'user-service', remember to change it in the
+commands below.  Similarly, you should set a good password in the
+password variable above.
+
+Then connect to the database and grant the needed
+priviledges.  For example:
+
+  # still as 'postgres' operating system user
+  psql -q -f role-grant.sql -v rolename=user-service users
+
+Optionally, to fill the database with some test data, issue a command:
+
+  psql -q -f test-insert.sql users user-service
+
+Note that this should be done as recycloid role, just as the recycloid
+software would do.
+

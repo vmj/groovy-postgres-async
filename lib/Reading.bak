@@ -1,0 +1,111 @@
+//import java.util.Collection;
+//import java.util.Iterator;
+
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
+
+public interface ResultSet extends Iterable<Row> {
+        Collection<String> getColumns();
+        Iterator<Row> iterator();
+        Row row(int index);
+        int size();
+        int updatedRows();
+}
+
+public interface Row {
+        /*
+        String getString(int index);
+        String getString(String column);
+        Byte getByte(int index);
+        Byte getByte(String column);
+        Character getChar(int index);
+        Character getChar(String column);
+        Short getShort(int index);
+        Short getShort(String column);
+        Integer getInt(int index);
+        Integer getInt(String column);
+        Long getLong(int index);
+        Long getLong(String column);
+        BigInteger getBigInteger(int index);
+        BigInteger getBigInteger(String column);
+        BigDecimal getBigDecimal(int index);
+        BigDecimal getBigDecimal(String column);
+        Date getDate(int index);
+        Date getDate(String column);
+        Time getTime(int index);
+        Time getTime(String column);
+        Timestamp getTimestamp(int index);
+        Timestamp getTimestamp(String column);
+        byte[] getBytes(int index);
+        byte[] getBytes(String column);
+        Boolean getBoolean(int index);
+        Boolean getBoolean(String b);
+        public <T> T get(int index, Class<T> type);
+        */
+        public <T> T get(String column, Class<T> type);
+        /*
+        public <TArray> TArray getArray(String column, Class<TArray> arrayType);
+        public <TArray> TArray getArray(int index, Class<TArray> arrayType);
+        */
+}
+
+class MockRow implements Row {
+        Map columns;
+
+        public <T> T get(String column, Class<T> type) {
+                columns.get(column);
+        }
+
+        public Object get(String name) {
+                println "using Object"
+                columns.get(name);
+        }
+}
+
+class MockResultSet implements ResultSet {
+        List rows;
+
+        public Collection<String> getColumns() { return ['id', 'uuid', 'url']; }
+        public Iterator<Row> iterator() { return rows.iterator(); }
+        public Row row(int index) { return rows[index]; }
+        public int size() { return rows.size(); }
+        public int updatedRows() { return 0; }
+}
+
+@SelfType(Row)
+trait GRow {
+        def propertyMissing(String name) {
+                // HOX: Object get(String) is not actually part of the Row interface,
+                //      but PgRow implements such public method.  Naturally, PgRow may
+                //      change that any day.
+                get(name);
+        }
+}
+
+@SelfType(ResultSet)
+trait GResultSet {
+        Iterator<Row> iterator() {
+                return new GRowIterator(super.iterator());
+        }
+
+        Row row(int index) {
+                super.row(index) as GRow
+        }
+
+        private static class GRowIterator implements Iterator<Row> {
+                private final Iterator<Row> rowIterator;
+                private GRowIterator(final Iterator<Row> rowIterator) { this.rowIterator = rowIterator; }
+                @Override public boolean hasNext() { return rowIterator.hasNext(); }
+                @Override public Row next() { return rowIterator.next() as GRow; }
+                @Override public void remove() { rowIterator.remove(); }
+        }
+}
+
+ResultSet res = new MockResultSet(rows: [
+                                    new MockRow(columns: [id: 1, uuid: 'abc', url: 'https://api.recycloid.org']),
+                                    new MockRow(columns: [id: 2, uuid: 'def', url: 'https://api.linuxbox.fi']),
+                                    new MockRow(columns: [id: 3, uuid: 'ghi', url: 'https://api.slackstep.org'])
+                                    ]);
+res = res as GResultSet
+res.each { println it.url }
