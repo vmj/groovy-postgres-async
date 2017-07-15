@@ -8,11 +8,11 @@ class DbFactory {
 
       static Db usersDb() {
              return  new ConnectionPoolBuilder()
-                     .hostname('localhost')
+                     .hostname('postgres')
                      .port(5432)
                      .database('users')
                      .username('user-service')
-                     .password('salasana')
+                     .password('us3r')
                      .poolSize(20)
                      .build()
       }

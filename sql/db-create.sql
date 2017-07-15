@@ -1,14 +1,15 @@
 -- USAGE:
 --
---  Connect to the PostgreSQL server using a database role who has
---  CREATEDB priviledge (or as superuser), and execute the commands in
---  this file.  For example:
+--  To create the database, connect to the PostgreSQL server
+--  using a database role who has CREATEDB priviledge (or as superuser),
+--  and execute the commands in this file.  For example:
 --
 --    su - postgres
 --    psql -q -f db-create.sql -v dbName=users
 --
---  The recycloid database should be owned by a database
---  administrator, not by any of the recycloid roles.
+--  Note that the database and the objects in it should NOT be owned by
+--  any of the roles that will be used by the software.  Some
+--  database administrative role is better suited for the owner.
 --
 
 CREATE DATABASE :"dbName"
