@@ -1,6 +1,5 @@
 This is just me toying with postgres-async-driver in Groovy.
 
-
 Let's start the PostgreSQL server:
 
   $ docker run --name my-postgres -e POSTGRES_PASSWORD=p4ssw0rd -d postgres:9.6-alpine
@@ -9,11 +8,11 @@ That's the Docker Official PostgreSQL image, and it supports container linking.
 
 Let us also set up the database:
 
-  $ alias psql='docker run -it --rm --link my-postgres:postgres -v $(pwd)/sql:/sql postgres:9.6-alpine psql -h postgres -U postgres -q'
-  $ psql -f /sql/db-create.sql -v dbName=users
-  $ psql -f /sql/db-types-create.sql users
-  $ psql -f /sql/role-create.sql -v rolename=user-service -v password=us3r
-  $ psql -f /sql/role-grant.sql -v rolename=user-service users
+  $ alias psql='docker run -it --rm --link my-postgres:postgres -v $(pwd)/sql:/sql -w /sql postgres:9.6-alpine psql -h postgres -U postgres -q'
+  $ psql -f db-create.sql -v dbName=users
+  $ psql -f db-types-create.sql users
+  $ psql -f role-create.sql -v rolename=user-service -v password=us3r
+  $ psql -f role-grant.sql -v rolename=user-service users
 
 We can run the Groovy scripts in Docker, too.  Because why not.
 
@@ -27,4 +26,12 @@ We can run the Groovy scripts in Docker, too.  Because why not.
 
 Note that Groovy seems to start really slowly, but that's just because the
 scripts are using Grapes and each Groovy invocation starts from a clean Docker image.
-I.e. each invocation re-downloads the postgres-async-driver before doing anything else.
+I.e. each invocation re-downloads the postgres-async-driver and deps before doing anything else.
+
+We can also build our own image that already contains the deps:
+
+  $ docker build -t vmj0/groovy-postgres-async:latest .
+  $ alias groovy='docker run -it --rm --link my-postgres:postgres -v $(pwd):/scripts -w /scripts vmj0/groovy-postgres-async:latest groovy -Dgrape.root=/home/groovy'
+  $ groovy 01-hello.groovy
+  Hello World!
+
